@@ -39,6 +39,21 @@ def healthz():
         return jsonify({"status": "ok", "db": "connected"})
     except Exception as e:
         return jsonify({"status": "error", "error": str(e)}), 500
+        
+@app.route("/api/left-members")
+def left_members():
+    conn = get_conn()
+    if not conn:
+        return jsonify({"error": "DB not connected"}), 500
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT * FROM left_members ORDER BY left_at DESC")
+        rows = [dict(r) for r in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify({"left_members": rows})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/api/data")
 def data():
