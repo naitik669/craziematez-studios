@@ -2,8 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboard, initials, urgencyColor, statusColor, statusLabel } from "@/hooks/use-dashboard";
 import { ChevronDown, Search, Filter } from "lucide-react";
-const { openTask } = useEnhancedModals();
-// on each row: onClick={() => openTask(t)}
+
 
 export default function Pipeline() {
   const { data } = useDashboard();
