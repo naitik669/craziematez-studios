@@ -10,15 +10,12 @@
       )?.absent_until,
     })
   }
-  style={{ cursor: "pointer" }}
   initial={{ opacity: 0, y: 16 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ delay: Math.min(i * 0.04, 0.5) }}
-  whileHover={{
-    y: -4,
-    scale: 1.015,
-  }}
-  className="group bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-300"
+  whileHover={{ y: -4, scale: 1.015 }}
+  className="group relative bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/[0.12]"
+  style={{ cursor: "pointer" }}
 >
 
   {/* 🔥 top gradient glow strip */}
@@ -29,7 +26,7 @@
     }}
   />
 
-  <div className="p-4">
+  <div className="p-4 relative z-10">
     <div className="flex items-start justify-between mb-4">
 
       {/* 🔥 avatar with glow */}
@@ -58,11 +55,11 @@
     </p>
   </div>
 
-  {/* 🔥 hover glow overlay */}
+  {/* 🔥 hover glow overlay (fixed) */}
   <div
     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none"
     style={{
-      background: `radial-gradient(circle at 50% 0%, ${rc}20, transparent 60%)`
+      background: `radial-gradient(circle at 50% 0%, ${rc}25, transparent 65%)`
     }}
   />
 </motion.div>
