@@ -14,6 +14,7 @@ const ROLE_COLORS: Record<string, string> = {
   designer: "#EC4899",
   artist: "#F97316",
   background: "#3B82F6",
+  manager: "#8B5CF6",
 };
 
 function roleColor(role: string) {
