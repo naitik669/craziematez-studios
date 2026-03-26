@@ -2,8 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useDashboard, initials } from "@/hooks/use-dashboard";
 import { useQuery } from "@tanstack/react-query";
-import { Search, ChevronRight, ExternalLink, UserMinus } from "lucide-react";
-const { openMember } = useEnhancedModals();
+
 
 // on each member card (replace or supplement existing expand logic):
 onClick={() => openMember(m, {
