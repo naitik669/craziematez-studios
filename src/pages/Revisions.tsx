@@ -3,12 +3,7 @@ import { motion } from "framer-motion";
 import { AlertCircle, MessageSquare } from "lucide-react";
 import { useEnhancedModals } from "@/enhancements/EnhancedModals";
 
-// inside component:
-const { openRevision } = useEnhancedModals();
 
-// on the motion.div card add:
-onClick={() => openRevision(r)}
-style={{ cursor: "pointer" }}
 
 const PRIORITY_COLOR: Record<string, string> = { high: "#EF4444", medium: "#F97316", low: "#737373" };
 
