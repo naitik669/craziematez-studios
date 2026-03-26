@@ -28,9 +28,9 @@ function roleColor(role: string) {
 export default function Team() {
   const { data } = useDashboard();
   const { openMember } = useEnhancedModals();
-
   const [q, setQ] = useState("");
 
+  // ✅ Left members API
   const { data: leftData } = useQuery({
     queryKey: ["left-members"],
     queryFn: () => fetch("/api/left-members").then(r => r.json()),
@@ -48,7 +48,7 @@ export default function Team() {
   });
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -69,83 +69,144 @@ export default function Team() {
         </div>
       </div>
 
-      {/* Members Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filtered.map((m, i) => {
-          const rc = roleColor(m.role_desc || "");
-          const tasks = data.member_tasks[String(m.member_id)] || [];
-          const isAbsent = data.absent_ids.includes(m.member_id);
-          const delivery = data.deliveries.find(
-            d => d.member_id === m.member_id
-          );
+      {/* ───── CURRENT TEAM ───── */}
+      <div>
+        <h2 className="text-sm text-neutral-500 uppercase tracking-wider mb-3">
+          Current Team
+        </h2>
 
-          return (
-            <motion.div
-              key={m.member_id ?? i}
-              onClick={() =>
-                openMember(m, {
-                  tasks,
-                  delivery,
-                  isAbsent,
-                  absentUntil: data.absences.find(
-                    a => a.member_id === m.member_id
-                  )?.absent_until,
-                })
-              }
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(i * 0.04, 0.5) }}
-              whileHover={{ y: -4, scale: 1.015 }}
-              className="group relative bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/[0.12]"
-              style={{ cursor: "pointer" }}
-            >
-              {/* Top gradient strip */}
-              <div
-                className="h-[2px] w-full opacity-60 group-hover:opacity-100 transition-opacity"
-                style={{
-                  background: `linear-gradient(90deg, transparent, ${rc}, transparent)`
-                }}
-              />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filtered.map((m, i) => {
+            const rc = roleColor(m.role_desc || "");
+            const tasks = data.member_tasks[String(m.member_id)] || [];
+            const isAbsent = data.absent_ids.includes(m.member_id);
+            const delivery = data.deliveries.find(
+              d => d.member_id === m.member_id
+            );
 
-              <div className="p-4 relative z-10">
-                <div className="flex items-start justify-between mb-4">
-                  {/* Avatar */}
-                  <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold text-black"
-                    style={{
-                      background: `linear-gradient(135deg, ${rc}, ${rc}aa, ${rc})`,
-                      boxShadow: `0 6px 18px ${rc}40`,
-                    }}
-                  >
-                    {initials(m.studio_name || m.display_name)}
+            return (
+              <motion.div
+                key={m.member_id ?? i}
+                onClick={() =>
+                  openMember(m, {
+                    tasks,
+                    delivery,
+                    isAbsent,
+                    absentUntil: data.absences.find(
+                      a => a.member_id === m.member_id
+                    )?.absent_until,
+                  })
+                }
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.04, 0.5) }}
+                whileHover={{ y: -4, scale: 1.015 }}
+                className="group relative bg-[#111] border border-white/[0.06] rounded-2xl overflow-hidden transition-all duration-300 hover:border-white/[0.12]"
+                style={{ cursor: "pointer" }}
+              >
+                {/* Gradient strip */}
+                <div
+                  className="h-[2px] w-full opacity-60 group-hover:opacity-100"
+                  style={{
+                    background: `linear-gradient(90deg, transparent, ${rc}, transparent)`
+                  }}
+                />
+
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold text-black"
+                      style={{
+                        background: `linear-gradient(135deg, ${rc}, ${rc}aa, ${rc})`,
+                        boxShadow: `0 6px 18px ${rc}40`,
+                      }}
+                    >
+                      {initials(m.studio_name || m.display_name)}
+                    </div>
+
+                    <ChevronRight
+                      size={14}
+                      className="text-neutral-700 mt-1 group-hover:translate-x-1 transition"
+                    />
                   </div>
 
-                  <ChevronRight
-                    size={14}
-                    className="text-neutral-700 mt-1 transition-transform group-hover:translate-x-1"
-                  />
+                  <p className="font-semibold text-white text-sm">
+                    {m.studio_name || m.display_name}
+                  </p>
+
+                  <p className="text-[11px] text-neutral-600">
+                    @{m.display_name}
+                  </p>
                 </div>
 
-                <p className="font-semibold text-white text-sm">
-                  {m.studio_name || m.display_name}
-                </p>
-
-                <p className="text-[11px] text-neutral-600">
-                  @{m.display_name}
-                </p>
-              </div>
-
-              {/* Glow overlay */}
-              <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle at 50% 0%, ${rc}25, transparent 65%)`
-                }}
-              />
-            </motion.div>
-          );
-        })}
+                {/* Glow */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at 50% 0%, ${rc}25, transparent 65%)`
+                  }}
+                />
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
+
+      {/* ───── LEFT MEMBERS ───── */}
+      {leftData?.length > 0 && (
+        <div>
+          <h2 className="text-sm text-neutral-500 uppercase tracking-wider mb-3">
+            Left Members
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 opacity-70">
+            {leftData.map((m: any, i: number) => {
+              const rc = roleColor(m.role_desc || "");
+
+              return (
+                <motion.div
+                  key={m.member_id ?? i}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.5) }}
+                  className="relative bg-[#111] border border-red-500/20 rounded-2xl overflow-hidden"
+                >
+                  {/* Red strip */}
+                  <div
+                    className="h-[2px] w-full"
+                    style={{
+                      background: `linear-gradient(90deg, transparent, #EF4444, transparent)`
+                    }}
+                  />
+
+                  <div className="p-4">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold text-black mb-3"
+                      style={{
+                        background: `linear-gradient(135deg, ${rc}, ${rc}aa, ${rc})`,
+                      }}
+                    >
+                      {initials(m.studio_name || m.display_name)}
+                    </div>
+
+                    <p className="font-semibold text-white text-sm">
+                      {m.studio_name || m.display_name}
+                    </p>
+
+                    <p className="text-[11px] text-neutral-600">
+                      @{m.display_name}
+                    </p>
+
+                    <p className="text-[10px] text-red-400 mt-1">
+                      Left team
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
