@@ -98,25 +98,45 @@ def data():
         cur.close()
         conn.close()
 
-        return jsonify({
-            "stats": {
-                "total_tasks": len(tasks),
-                "members": len(members),
-                "projects": len(projects),
-            },
-            "tasks": tasks,
-            "members": members,
-            "deliveries": deliveries,
-            "uploads": uploads,
-            "absences": absences,
-            "styleguide": styleguide,
-            "revisions": revisions,
-            "meetings": meetings,
-            "reminders": reminders,
-            "notes": notes,
-            "projects": projects,
-        })
-
-    except Exception as e:
-        print(f"❌ /api/data error: {e}")
-        return jsonify({"error": str(e)}), 500
+       return jsonify({
+    "stats": {
+        "total_tasks": len(tasks),
+        "members": len(members),
+        "projects": len(projects),
+        "completed": 0,
+        "active": 0,
+        "in_review": 0,
+        "todo": 0,
+        "approved": 0,
+        "percent": 0,
+        "days_left": None,
+        "weeks_left": None,
+        "total_on_time": 0,
+        "total_late": 0,
+        "on_time_rate": 0,
+        "total_revisions": len(revisions),
+        "total_uploads": len(uploads),
+        "upcoming_meetings": len(meetings),
+        "pending_reminders": len(reminders),
+        "absent_count": len(absences),
+        "health_score": 100,
+        "total_projects": len(projects),
+        "active_projects": len(projects),
+    },
+    "tasks": tasks,
+    "members": [{**m, "member_id": str(m["member_id"])} for m in members],
+    "deliveries": deliveries,
+    "delivery_log": [],
+    "uploads": uploads,
+    "absences": absences,
+    "absent_ids": [],
+    "styleguide": styleguide,
+    "revisions": revisions,
+    "meetings": meetings,
+    "reminders": reminders,
+    "notes": notes,
+    "projects": projects,
+    "member_tasks": {},
+    "revision_counts": {},
+    "activity": [],
+})
