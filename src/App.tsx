@@ -20,7 +20,7 @@ export type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "me
 const PAGES: Record<Tab, React.ComponentType> = {
   overview: Overview, pipeline: Pipeline, team: Team,
   revisions: Revisions, files: Files, meetings: Meetings,
-  notes: Notes, styleguide: Styleguide,
+  notes: Notes, styleguide: Styleguide, "left-members": LeftMembers,
 };
 
 function Inner() {
