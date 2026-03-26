@@ -195,7 +195,16 @@ def data():
             "projects": [{"project_id": p.get("project_id"), "name": p.get("name",""), "stage": p.get("stage"), "deadline": str(p.get("deadline") or ""), "description": p.get("description"), "created_by": p.get("created_by"), "created_at": str(p.get("created_at") or ""), "archived": p.get("archived") or False} for p in projects],
             "member_tasks": member_tasks,
             "revision_counts": revision_counts,
-            "activity": [],
+            "activity":
+            "activity": sorted([
+    *[{"type": "assigned", "text": f"{t['member_name']} assigned to {t['scene']}", "date": t["assigned_at"], "icon": "🎯", "color": "amber"} for t in serialized_tasks[:20] if t.get("assigned_at")],
+    *[{"type": "completed", "text": f"{t['member_name']} completed {t['scene']}", "date": t["completed_at"], "icon": "✅", "color": "green"} for t in serialized_tasks[:20] if t.get("status") == "completed" and t.get("completed_at")],
+    *[{"type": "revision", "text": f"Revision on {r.get('scene')} — {r.get('priority','medium')} priority", "date": str(r.get("date") or ""), "icon": "🔄", "color": "red"} for r in revisions[:10]],
+    *[{"type": "upload", "text": f"{u.get('member_name')} uploaded {u.get('file_type') or 'file'} for {u.get('scene')}", "date": str(u.get("uploaded_at") or ""), "icon": "📎", "color": "blue"} for u in uploads[:10]],
+    *[{"type": "member", "text": f"{m.get('studio_name') or m.get('display_name')} joined the studio", "date": str(m.get("joined_at") or ""), "icon": "👤", "color": "green"} for m in members if m.get("joined_at")],
+    *[{"type": "project", "text": f"Project \"{p.get('name')}\" created", "date": str(p.get("created_at") or ""), "icon": "🎬", "color": "amber"} for p in projects if p.get("created_at")],
+    *([{"type": "styleguide", "text": "Styleguide locked 🔒", "date": "", "icon": "🔒", "color": "purple"}] if styleguide.get("locked") == "true" else []),
+], key=lambda x: x["date"], reverse=True)[:25],
         })
 
     except Exception as e:
