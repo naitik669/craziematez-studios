@@ -14,6 +14,14 @@ import Notes from "@/pages/Notes";
 import Styleguide from "@/pages/Styleguide";
 import LeftMembers from "@/pages/LeftMembers";
 const queryClient = new QueryClient();
+// src/main.tsx
+import { EnhancedModalProvider } from "@/enhancements/EnhancedModals";
+
+root.render(
+  <EnhancedModalProvider>
+    <App />
+  </EnhancedModalProvider>
+);
 
 export type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "meetings" | "notes" | "styleguide";
 
