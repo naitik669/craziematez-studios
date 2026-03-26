@@ -2,6 +2,14 @@ import { useDashboard } from "@/hooks/use-dashboard";
 import { motion } from "framer-motion";
 import { AlertCircle, MessageSquare } from "lucide-react";
 import { useEnhancedModals } from "@/enhancements/EnhancedModals";
+import { useEnhancedModals } from "@/enhancements/EnhancedModals";
+
+// inside component:
+const { openRevision } = useEnhancedModals();
+
+// on the motion.div card add:
+onClick={() => openRevision(r)}
+style={{ cursor: "pointer" }}
 
 
 
