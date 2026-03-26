@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDashboard, initials, urgencyColor, statusColor, statusLabel } from "@/hooks/use-dashboard";
-import { ChevronDown, Search, Filter } from "lucide-react";
-
+import { useEnhancedModals } from "@/hooks/use-enhanced-modals"; // ✅ added
+import { ChevronDown, Search } from "lucide-react";
 
 export default function Pipeline() {
   const { data } = useDashboard();
+  const { openTask } = useEnhancedModals(); // ✅ added
+
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [type, setType] = useState("all");
@@ -14,6 +16,7 @@ export default function Pipeline() {
   if (!data) return <div className="p-6 text-neutral-600">Loading...</div>;
 
   const types = [...new Set(data.tasks.map(t => t.task_type).filter(Boolean))] as string[];
+
   const filtered = data.tasks
     .filter(t => {
       const ql = q.toLowerCase();
@@ -34,7 +37,10 @@ export default function Pipeline() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display font-bold text-2xl text-white">Pipeline</h1>
-          <p className="text-neutral-500 text-sm mt-0.5">{filtered.length} scenes{overdue > 0 && <span className="text-red-400 ml-1">· {overdue} overdue</span>}</p>
+          <p className="text-neutral-500 text-sm mt-0.5">
+            {filtered.length} scenes
+            {overdue > 0 && <span className="text-red-400 ml-1">· {overdue} overdue</span>}
+          </p>
         </div>
       </div>
 
@@ -48,7 +54,8 @@ export default function Pipeline() {
         ].map((s, i) => (
           <motion.div
             key={s.label}
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
             className="bg-[#111] border border-white/[0.06] rounded-2xl p-4 text-center"
           >
@@ -69,16 +76,18 @@ export default function Pipeline() {
             className="bg-transparent text-sm text-neutral-300 placeholder:text-neutral-600 outline-none flex-1"
           />
         </div>
+
         <select
           value={status}
           onChange={e => setStatus(e.target.value)}
           className="bg-[#111] border border-white/[0.06] rounded-xl px-3 py-2 text-sm text-neutral-400 outline-none"
         >
           <option value="all">All Status</option>
-          {["todo","in progress","in review","approved","completed"].map(s => (
+          {["todo", "in progress", "in review", "approved", "completed"].map(s => (
             <option key={s} value={s}>{statusLabel(s)}</option>
           ))}
         </select>
+
         {types.length > 0 && (
           <select
             value={type}
@@ -117,29 +126,36 @@ export default function Pipeline() {
                   t.status === "completed" ? "border-green-500/15" :
                   isExpanded ? "border-orange-500/30" : "border-white/[0.06]"
                 }`}
-                onClick={() => setExpanded(isExpanded ? null : t.id)}
+                onClick={() => {
+                  setExpanded(isExpanded ? null : t.id); // 👈 keep expand
+                  openTask(t); // 👈 open modal
+                }}
                 whileHover={{ y: -2 }}
               >
                 <div className="p-4">
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <span className="font-mono-jet text-[13px] font-semibold text-white leading-tight">{t.scene}</span>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border font-mono-jet"
-                        style={{ color: sc, background: `${sc}15`, borderColor: `${sc}30` }}>
-                        {statusLabel(t.status)}
-                      </span>
-                    </div>
+                    <span className="font-mono-jet text-[13px] font-semibold text-white leading-tight">
+                      {t.scene}
+                    </span>
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full border font-mono-jet"
+                      style={{ color: sc, background: `${sc}15`, borderColor: `${sc}30` }}
+                    >
+                      {statusLabel(t.status)}
+                    </span>
                   </div>
 
                   {/* Member */}
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-[9px] font-bold text-black flex-shrink-0">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center text-[9px] font-bold text-black">
                       {initials(t.member_name)}
                     </div>
                     <span className="text-[12px] text-neutral-400">{t.member_name}</span>
                     {t.task_type && (
-                      <span className="ml-auto text-[10px] text-neutral-600 bg-white/[0.04] px-2 py-0.5 rounded-full font-mono-jet">{t.task_type}</span>
+                      <span className="ml-auto text-[10px] text-neutral-600 bg-white/[0.04] px-2 py-0.5 rounded-full font-mono-jet">
+                        {t.task_type}
+                      </span>
                     )}
                   </div>
 
@@ -154,14 +170,18 @@ export default function Pipeline() {
                         </span>
                       )}
                     </span>
+
                     <div className="flex items-center gap-2">
                       {revs > 0 && <span className="text-neutral-600">🔄 {revs}</span>}
-                      <ChevronDown size={13} className={`text-neutral-600 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        size={13}
+                        className={`text-neutral-600 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Expanded details */}
+                {/* Expanded */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
@@ -177,11 +197,17 @@ export default function Pipeline() {
                           { label: "Assigned On", val: t.assigned_at?.slice(0, 10) || "—" },
                           { label: "Revisions", val: String(t.revisions ?? 0) },
                           { label: "Urgency", val: t.urgency },
-                          ...(t.completed_at ? [{ label: "Completed", val: t.completed_at.slice(0, 10) }] : []),
+                          ...(t.completed_at
+                            ? [{ label: "Completed", val: t.completed_at.slice(0, 10) }]
+                            : []),
                         ].map(item => (
                           <div key={item.label} className="bg-[#111] rounded-xl p-3 border border-white/[0.04]">
-                            <p className="text-[9px] uppercase tracking-widest text-neutral-600 mb-1">{item.label}</p>
-                            <p className="text-[12px] font-mono-jet text-neutral-300">{item.val}</p>
+                            <p className="text-[9px] uppercase tracking-widest text-neutral-600 mb-1">
+                              {item.label}
+                            </p>
+                            <p className="text-[12px] font-mono-jet text-neutral-300">
+                              {item.val}
+                            </p>
                           </div>
                         ))}
                       </div>
