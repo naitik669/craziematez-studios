@@ -3,6 +3,15 @@ import { motion } from "framer-motion";
 import { useDashboard, initials } from "@/hooks/use-dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { Search, ChevronRight, ExternalLink, UserMinus } from "lucide-react";
+const { openMember } = useEnhancedModals();
+
+// on each member card (replace or supplement existing expand logic):
+onClick={() => openMember(m, {
+  tasks,
+  delivery,
+  isAbsent,
+  absentUntil: data.absences.find(a => a.member_id === m.member_id)?.absent_until,
+})}
 
 const ROLE_COLORS: Record<string, string> = {
   animator: "#F97316", editor: "#3B82F6", director: "#8B5CF6",
