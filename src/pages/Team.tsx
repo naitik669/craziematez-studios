@@ -2,7 +2,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useDashboard, initials } from "@/hooks/use-dashboard";
 import { useQuery } from "@tanstack/react-query";
+const { openMember } = useEnhancedModals();
 
+// on each member card (replace or supplement existing expand logic):
+onClick={() => openMember(m, {
+  tasks,
+  delivery,
+  isAbsent,
+  absentUntil: data.absences.find(a => a.member_id === m.member_id)?.absent_until,
+})}
 
 
 
