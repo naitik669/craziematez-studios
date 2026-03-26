@@ -22,7 +22,14 @@ const PAGES: Record<Tab, React.ComponentType> = {
   revisions: Revisions, files: Files, meetings: Meetings,
   notes: Notes, styleguide: Styleguide, "left-members": LeftMembers,
 };
+// src/main.tsx
+import { EnhancedModalProvider } from "@/enhancements/EnhancedModals";
 
+root.render(
+  <EnhancedModalProvider>
+    <App />
+  </EnhancedModalProvider>
+);
 function Inner() {
   const [tab, setTab] = useState<Tab>("overview");
   const Page = PAGES[tab];
