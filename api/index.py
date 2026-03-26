@@ -195,7 +195,7 @@ def data():
             "projects": [{"project_id": p.get("project_id"), "name": p.get("name",""), "stage": p.get("stage"), "deadline": str(p.get("deadline") or ""), "description": p.get("description"), "created_by": p.get("created_by"), "created_at": str(p.get("created_at") or ""), "archived": p.get("archived") or False} for p in projects],
             "member_tasks": member_tasks,
             "revision_counts": revision_counts,
-            "activity":
+        
             "activity": sorted([
     *[{"type": "assigned", "text": f"{t['member_name']} assigned to {t['scene']}", "date": t["assigned_at"], "icon": "🎯", "color": "amber"} for t in serialized_tasks[:20] if t.get("assigned_at")],
     *[{"type": "completed", "text": f"{t['member_name']} completed {t['scene']}", "date": t["completed_at"], "icon": "✅", "color": "green"} for t in serialized_tasks[:20] if t.get("status") == "completed" and t.get("completed_at")],
