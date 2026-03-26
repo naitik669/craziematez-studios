@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDashboard, initials, urgencyColor, statusColor, statusLabel } from "@/hooks/use-dashboard";
 import { useEnhancedModals } from "@/hooks/use-enhanced-modals";
 import { ChevronDown, Search } from "lucide-react";
+import { useEnhancedModals } from "@/hooks/use-enhanced-modals";
 
 export default function Pipeline() {
   const { data } = useDashboard();
