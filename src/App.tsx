@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Sidebar from "@/components/Sidebar";
+
 import Overview from "@/pages/Overview";
 import Pipeline from "@/pages/Pipeline";
 import Team from "@/pages/Team";
@@ -13,30 +14,40 @@ import Meetings from "@/pages/Meetings";
 import Notes from "@/pages/Notes";
 import Styleguide from "@/pages/Styleguide";
 import LeftMembers from "@/pages/LeftMembers";
+
 const queryClient = new QueryClient();
-// src/main.tsx
-import { EnhancedModalProvider } from "@/enhancements/EnhancedModals";
 
-root.render(
-  <EnhancedModalProvider>
-    <App />
-  </EnhancedModalProvider>
-);
-
-export type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "meetings" | "notes" | "styleguide";
+export type Tab =
+  | "overview"
+  | "pipeline"
+  | "team"
+  | "revisions"
+  | "files"
+  | "meetings"
+  | "notes"
+  | "styleguide"
+  | "left-members"; // ✅ added missing type
 
 const PAGES: Record<Tab, React.ComponentType> = {
-  overview: Overview, pipeline: Pipeline, team: Team,
-  revisions: Revisions, files: Files, meetings: Meetings,
-  notes: Notes, styleguide: Styleguide, "left-members": LeftMembers,
+  overview: Overview,
+  pipeline: Pipeline,
+  team: Team,
+  revisions: Revisions,
+  files: Files,
+  meetings: Meetings,
+  notes: Notes,
+  styleguide: Styleguide,
+  "left-members": LeftMembers,
 };
 
 function Inner() {
   const [tab, setTab] = useState<Tab>("overview");
   const Page = PAGES[tab];
+
   return (
     <div className="flex h-screen bg-[#0A0A0A] overflow-hidden">
       <Sidebar active={tab} onNavigate={(t) => setTab(t as Tab)} />
+
       <main className="flex-1 overflow-y-auto relative">
         <AnimatePresence mode="wait">
           <motion.div
