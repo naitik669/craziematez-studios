@@ -1,6 +1,8 @@
 import { useDashboard } from "@/hooks/use-dashboard";
 import { motion } from "framer-motion";
 import { Calendar, Clock, FileText } from "lucide-react";
+const { openMeeting } = useEnhancedModals();
+// on MeetingCard div: onClick={() => openMeeting(m)}
 
 export default function Meetings() {
   const { data } = useDashboard();
