@@ -12,7 +12,7 @@ import Files from "@/pages/Files";
 import Meetings from "@/pages/Meetings";
 import Notes from "@/pages/Notes";
 import Styleguide from "@/pages/Styleguide";
-
+import LeftMembers from "@/pages/LeftMembers";
 const queryClient = new QueryClient();
 
 export type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "meetings" | "notes" | "styleguide";
