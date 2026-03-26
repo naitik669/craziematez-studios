@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useDashboard, initials } from "@/hooks/use-dashboard";
-import { Search, ChevronRight, ExternalLink } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, ChevronRight, ExternalLink, UserMinus } from "lucide-react";
 
 const ROLE_COLORS: Record<string, string> = {
   animator: "#F97316", editor: "#3B82F6", director: "#8B5CF6",
@@ -17,10 +18,26 @@ function roleColor(role: string) {
   return "#F97316";
 }
 
+interface LeftMember {
+  id: number;
+  member_id: number;
+  display_name: string;
+  studio_name: string | null;
+  role_desc: string | null;
+  skills: string | null;
+  left_at: string;
+  reason: string;
+}
+
 export default function Team() {
   const { data } = useDashboard();
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState<number | null>(null);
+
+  const { data: leftData } = useQuery<{ left_members: LeftMember[] }>({
+    queryKey: ["left-members"],
+    queryFn: () => fetch("/api/left-members").then(r => r.json()),
+  });
 
   if (!data) return <div className="p-6 text-neutral-600">Loading...</div>;
 
@@ -29,6 +46,7 @@ export default function Team() {
     return !q || (m.studio_name || m.display_name).toLowerCase().includes(ql) || m.display_name.toLowerCase().includes(ql);
   });
 
+  const leftMembers = leftData?.left_members ?? [];
   const now = new Date();
 
   return (
@@ -196,6 +214,56 @@ export default function Team() {
           );
         })}
       </div>
+
+      {/* ── Former Members ─────────────────────────────────────────── */}
+      {leftMembers.length > 0 && (
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center gap-2">
+            <UserMinus size={14} className="text-neutral-600" />
+            <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-widest">Former Members</h2>
+            <span className="text-xs bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full">{leftMembers.length}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {leftMembers.map((m, i) => {
+              const rc = roleColor(m.role_desc || "");
+              return (
+                <motion.div
+                  key={m.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(i * 0.04, 0.4) }}
+                  className="bg-[#0f0f0f] border border-white/[0.04] rounded-2xl p-4 opacity-60 hover:opacity-80 transition-opacity"
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-black grayscale"
+                      style={{ background: `linear-gradient(135deg, ${rc}, ${rc}cc)` }}
+                    >
+                      {initials(m.studio_name || m.display_name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-neutral-400 truncate">{m.studio_name || m.display_name}</p>
+                      <p className="text-[11px] text-neutral-600">@{m.display_name}</p>
+                    </div>
+                    <span className="text-[10px] bg-red-500/10 text-red-500 border border-red-500/20 px-2 py-0.5 rounded-full flex-shrink-0">Left</span>
+                  </div>
+                  {m.role_desc && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border font-mono-jet"
+                      style={{ color: rc, background: `${rc}10`, borderColor: `${rc}20` }}>
+                      {m.role_desc}
+                    </span>
+                  )}
+                  {m.left_at && (
+                    <p className="text-[10px] text-neutral-700 mt-2">
+                      Left {new Date(m.left_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
