@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { StickyNote, Search, User, Film } from "lucide-react";
-
+const { openNote } = useEnhancedModals();
+// on each note card: onClick={() => openNote(n)}
 export default function Notes() {
   const { data } = useDashboard();
   const [q, setQ] = useState("");
