@@ -17,6 +17,7 @@ import Styleguide from "@/pages/Styleguide";
 import LeftMembers from "@/pages/LeftMembers";
 import WipGallery from "@/pages/WipGallery";
 import Announcements from "@/pages/Announcements";
+import MemberProfile from "@/pages/MemberProfile";
 
 const queryClient = new QueryClient();
 
