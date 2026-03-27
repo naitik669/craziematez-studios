@@ -6,7 +6,7 @@ import {
   Calendar, FileText, Palette, ChevronRight, Zap, Wifi, Bell, Image, Megaphone
 } from "lucide-react";
 
-type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "meetings" | "notes" | "styleguide" | "wip" | "announcements";
+type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "meetings" | "notes" | "styleguide" | "left-members" | "wip" | "announcements";
 
 interface NavItem { id: Tab; icon: React.ComponentType<{ size?: number; className?: string }>; label: string; badge?: number }
 
