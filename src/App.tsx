@@ -32,7 +32,8 @@ export type Tab =
   | "styleguide"
   | "left-members"
   | "wip"
-  | "announcements";
+  | "announcements"
+  | "member-profile";
 
 // ✅ just register them like others (THIS is the correct way)
 const PAGES: Record<Tab, React.ComponentType> = {
