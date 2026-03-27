@@ -15,10 +15,11 @@ import Meetings from "@/pages/Meetings";
 import Notes from "@/pages/Notes";
 import Styleguide from "@/pages/Styleguide";
 import LeftMembers from "@/pages/LeftMembers";
-import  WipGallery from "@/pages/WipGallery";
-import  Announcements from "@/pages/Announcements";
+import WipGallery from "@/pages/WipGallery";
+import Announcements from "@/pages/Announcements";
 
 const queryClient = new QueryClient();
+
 export type Tab =
   | "overview"
   | "pipeline"
@@ -29,9 +30,10 @@ export type Tab =
   | "notes"
   | "styleguide"
   | "left-members"
-  | "wip"              // ✅ added
-  | "announcements";   // ✅ added
+  | "wip"
+  | "announcements";
 
+// ✅ just register them like others (THIS is the correct way)
 const PAGES: Record<Tab, React.ComponentType> = {
   overview: Overview,
   pipeline: Pipeline,
@@ -42,9 +44,10 @@ const PAGES: Record<Tab, React.ComponentType> = {
   notes: Notes,
   styleguide: Styleguide,
   "left-members": LeftMembers,
+  wip: WipGallery,
+  announcements: Announcements,
 };
-{active === "wip" && <WipGallery />}
-{active === "announcements" && <Announcements />}
+
 function Inner() {
   const [tab, setTab] = useState<Tab>("overview");
   const Page = PAGES[tab];
