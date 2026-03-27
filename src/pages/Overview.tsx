@@ -111,6 +111,7 @@ export default function Overview() {
   const { data, isLoading, error, refetch } = useDashboard();
   const [chartOpen, setChartOpen] = useState(false);
   const [heroOpen, setHeroOpen] = useState(false);
+  const [statModal, setStatModal] = useState<string | null>(null);
   const now = new Date();
 
   if (isLoading) {
@@ -415,11 +416,306 @@ export default function Overview() {
 
       {/* ── STAT CARDS ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Total Scenes" value={s.total} sub="All time" accent="#F97316" delay={0.05} icon={<Layers />} />
-        <StatCard label="Completed" value={s.completed} sub={`${s.percent}% done`} accent="#22C55E" delay={0.1} icon={<CheckCircle2 size={16} />} />
-        <StatCard label="Team Members" value={s.members} sub={`${s.absent_count} away`} accent="#3B82F6" delay={0.15} icon={<Users size={16} />} />
-        <StatCard label="Revisions" value={s.total_revisions} sub="Total sent" accent="#8B5CF6" delay={0.2} icon={<RefreshCw size={16} />} />
+        <StatCard label="Total Scenes" value={s.total} sub="All time" accent="#F97316" delay={0.05} icon={<Layers />} onClick={() => setStatModal("scenes")} />
+        <StatCard label="Completed" value={s.completed} sub={`${s.percent}% done`} accent="#22C55E" delay={0.1} icon={<CheckCircle2 size={16} />} onClick={() => setStatModal("completed")} />
+        <StatCard label="Team Members" value={s.members} sub={`${s.absent_count} away`} accent="#3B82F6" delay={0.15} icon={<Users size={16} />} onClick={() => setStatModal("team")} />
+        <StatCard label="Revisions" value={s.total_revisions} sub="Total sent" accent="#8B5CF6" delay={0.2} icon={<RefreshCw size={16} />} onClick={() => setStatModal("revisions")} />
       </div>
+
+
+      {/* ── STAT DETAIL MODALS ── */}
+      <AnimatePresence>
+        {statModal && (() => {
+          const close = () => setStatModal(null);
+          const configs: Record<string, { title: string; accent: string; content: React.ReactNode }> = {
+            scenes: {
+              title: "Total Scenes",
+              accent: "#F97316",
+              content: (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: "Total Scenes", value: String(s.total), color: "#F97316", sub: "all assigned" },
+                      { label: "Completed", value: String(s.completed), color: "#22C55E", sub: `${s.percent}% done` },
+                      { label: "In Progress", value: String(s.active), color: "#F97316", sub: "being worked on" },
+                      { label: "In Review", value: String(s.in_review), color: "#3B82F6", sub: "awaiting approval" },
+                      { label: "Approved", value: String(s.approved), color: "#8B5CF6", sub: "signed off" },
+                      { label: "Todo", value: String(s.todo), color: "#555", sub: "not started" },
+                    ].map((item, i) => (
+                      <motion.div key={item.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}
+                        className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                        <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1">{item.label}</p>
+                        <p className="font-display font-bold text-2xl" style={{ color: item.color }}>{item.value}</p>
+                        <p className="text-[10px] text-neutral-700 mt-1 font-mono-jet">{item.sub}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">Status Breakdown</p>
+                    {[
+                      { label: "Completed", value: s.completed, color: "#22C55E" },
+                      { label: "In Progress", value: s.active, color: "#F97316" },
+                      { label: "In Review", value: s.in_review, color: "#3B82F6" },
+                      { label: "Approved", value: s.approved, color: "#8B5CF6" },
+                      { label: "Todo", value: s.todo, color: "#555" },
+                    ].filter(d => d.value > 0).map((d, i) => (
+                      <div key={d.label} className="mb-3">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-[11px] text-neutral-400">{d.label}</span>
+                          <span className="text-[11px] font-mono-jet" style={{ color: d.color }}>{d.value} ({s.total > 0 ? Math.round((d.value/s.total)*100) : 0}%)</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                          <motion.div className="h-full rounded-full" style={{ background: d.color }}
+                            initial={{ width: 0 }} animate={{ width: s.total > 0 ? `${(d.value/s.total)*100}%` : "0%" }}
+                            transition={{ duration: 0.9, ease: "easeOut", delay: 0.1 + i * 0.08 }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {data.tasks.length > 0 && (
+                    <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">Recent Scenes</p>
+                      <div className="space-y-2">
+                        {data.tasks.slice(0, 6).map((t, i) => {
+                          const sc: Record<string,string> = { completed: "#22C55E", "in progress": "#F97316", "in review": "#3B82F6", approved: "#8B5CF6", todo: "#555" };
+                          const c = sc[t.status] || "#555";
+                          return (
+                            <div key={t.id} className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c }} />
+                              <span className="text-[12px] text-neutral-300 font-mono-jet flex-1 truncate">{t.scene}</span>
+                              <span className="text-[10px] text-neutral-600">{t.member_name}</span>
+                              <span className="text-[10px] font-mono-jet capitalize" style={{ color: c }}>{t.status}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            completed: {
+              title: "Completed Scenes",
+              accent: "#22C55E",
+              content: (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Completed", value: String(s.completed), color: "#22C55E", sub: "scenes done" },
+                      { label: "Completion", value: `${s.percent}%`, color: "#22C55E", sub: "of total" },
+                      { label: "On-Time", value: String(s.total_on_time), color: "#F97316", sub: "delivered" },
+                    ].map((item, i) => (
+                      <motion.div key={item.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}
+                        className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05] text-center">
+                        <p className="text-[9px] uppercase tracking-widest text-neutral-600 mb-1">{item.label}</p>
+                        <p className="font-display font-bold text-2xl" style={{ color: item.color }}>{item.value}</p>
+                        <p className="text-[10px] text-neutral-700 mt-1 font-mono-jet">{item.sub}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-2">Progress to 100%</p>
+                    <div className="flex items-end gap-3 mb-3">
+                      <span className="font-display font-bold text-4xl" style={{ color: "#22C55E" }}>
+                        <CountUp to={s.percent} duration={1000} suffix="%" />
+                      </span>
+                      <span className="text-neutral-600 text-sm mb-1">{s.total - s.completed} remaining</span>
+                    </div>
+                    <div className="h-3 rounded-full bg-white/[0.04] overflow-hidden">
+                      <motion.div className="h-full rounded-full relative" style={{ background: "linear-gradient(90deg, #22C55E80, #22C55E)", boxShadow: "0 0 12px #22C55E50" }}
+                        initial={{ width: 0 }} animate={{ width: `${s.percent}%` }}
+                        transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }} />
+                    </div>
+                  </div>
+                  {data.tasks.filter(t => t.status === "completed").length > 0 && (
+                    <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">Completed Scenes</p>
+                      <div className="space-y-2">
+                        {data.tasks.filter(t => t.status === "completed").slice(0, 6).map((t) => (
+                          <div key={t.id} className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                            <span className="text-green-500 text-sm">✓</span>
+                            <span className="text-[12px] text-neutral-300 font-mono-jet flex-1 truncate">{t.scene}</span>
+                            <span className="text-[10px] text-neutral-600">{t.member_name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+            team: {
+              title: "Team Members",
+              accent: "#3B82F6",
+              content: (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Total Members", value: String(s.members), color: "#3B82F6", sub: "in studio" },
+                      { label: "Available", value: String(s.members - s.absent_count), color: "#22C55E", sub: "active now" },
+                      { label: "Away", value: String(s.absent_count), color: "#EAB308", sub: "on leave" },
+                    ].map((item, i) => (
+                      <motion.div key={item.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}
+                        className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05] text-center">
+                        <p className="text-[9px] uppercase tracking-widest text-neutral-600 mb-1">{item.label}</p>
+                        <p className="font-display font-bold text-2xl" style={{ color: item.color }}>{item.value}</p>
+                        <p className="text-[10px] text-neutral-700 mt-1 font-mono-jet">{item.sub}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                  {data.absences.length > 0 && (
+                    <div className="bg-yellow-500/5 rounded-2xl p-4 border border-yellow-500/20">
+                      <p className="text-[10px] uppercase tracking-widest text-yellow-600 mb-3">Currently Away</p>
+                      <div className="space-y-2">
+                        {data.absences.map((a) => (
+                          <div key={a.member_id} className="flex items-center gap-2.5 p-2 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
+                            <span className="text-sm">✈</span>
+                            <span className="text-[12px] text-yellow-300 flex-1">{a.member_name}</span>
+                            <span className="text-[10px] text-yellow-600 font-mono-jet">until {a.absent_until?.slice(0,10)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">Top Performers</p>
+                    <div className="space-y-2.5">
+                      {[...data.deliveries].sort((a, b) => b.on_time - a.on_time).slice(0, 5).map((d, i) => {
+                        const rate = Math.round((d.on_time / Math.max(d.count, 1)) * 100);
+                        return (
+                          <div key={i} className="flex items-center gap-3">
+                            <span className="text-base w-5 text-center">{["🥇","🥈","🥉","",""][i]}</span>
+                            <span className="text-sm text-neutral-300 flex-1">{d.member_name}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                                <motion.div className="h-full rounded-full bg-blue-500"
+                                  initial={{ width: 0 }} animate={{ width: `${rate}%` }}
+                                  transition={{ duration: 0.8, delay: 0.1 * i }} />
+                              </div>
+                              <span className="text-[11px] text-blue-400 font-mono-jet w-8 text-right">{rate}%</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">All Members</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {data.members.map((m) => {
+                        const tasks = data.member_tasks[String(m.member_id)] || [];
+                        const done = tasks.filter(t => t.status === "completed").length;
+                        const isAbsent = data.absent_ids.includes(m.member_id);
+                        return (
+                          <div key={m.member_id} className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isAbsent ? "bg-yellow-500" : "bg-green-500"}`} />
+                            <span className="text-[12px] text-neutral-300 truncate flex-1">{m.studio_name || m.display_name}</span>
+                            <span className="text-[10px] text-neutral-600 font-mono-jet">{done}✓</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+            revisions: {
+              title: "Revisions",
+              accent: "#8B5CF6",
+              content: (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Total", value: String(s.total_revisions), color: "#8B5CF6", sub: "all requests" },
+                      { label: "High Priority", value: String(data.revisions.filter(r => r.priority === "high").length), color: "#EF4444", sub: "urgent" },
+                      { label: "Medium", value: String(data.revisions.filter(r => r.priority === "medium").length), color: "#F97316", sub: "normal" },
+                    ].map((item, i) => (
+                      <motion.div key={item.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}
+                        className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05] text-center">
+                        <p className="text-[9px] uppercase tracking-widest text-neutral-600 mb-1">{item.label}</p>
+                        <p className="font-display font-bold text-2xl" style={{ color: item.color }}>{item.value}</p>
+                        <p className="text-[10px] text-neutral-700 mt-1 font-mono-jet">{item.sub}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                  {data.revisions.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-4xl mb-3">✅</p>
+                      <p className="text-neutral-500">No revisions yet!</p>
+                    </div>
+                  ) : (
+                    <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">All Revisions</p>
+                      <div className="space-y-2">
+                        {[...data.revisions].sort((a,b) => ["high","medium","low"].indexOf(a.priority) - ["high","medium","low"].indexOf(b.priority)).map((r, i) => {
+                          const pc: Record<string,string> = { high: "#EF4444", medium: "#F97316", low: "#737373" };
+                          const c = pc[r.priority] || "#737373";
+                          return (
+                            <motion.div key={r.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}
+                              className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]"
+                              style={{ borderLeftColor: `${c}40`, borderLeftWidth: 2 }}>
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-[12px] text-white font-mono-jet font-semibold">{r.scene}</span>
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full font-mono-jet capitalize flex-shrink-0"
+                                  style={{ color: c, background: `${c}18`, border: `1px solid ${c}30` }}>{r.priority}</span>
+                              </div>
+                              {r.member_name && <p className="text-[11px] text-neutral-600 mt-0.5">by {r.member_name}</p>}
+                              {r.notes && <p className="text-[11px] text-neutral-500 mt-1 leading-relaxed">{r.notes}</p>}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ),
+            },
+          };
+          const cfg = configs[statModal];
+          if (!cfg) return null;
+          return (
+            <>
+              <motion.div className="fixed inset-0 z-[999]"
+                style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)" }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={close}
+              />
+              <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
+                <motion.div
+                  className="pointer-events-auto w-full max-w-xl rounded-3xl overflow-hidden relative"
+                  style={{
+                    background: "#0f0f0f",
+                    border: `1px solid ${cfg.accent}25`,
+                    maxHeight: "88vh", overflowY: "auto",
+                    boxShadow: `0 0 80px ${cfg.accent}08, 0 32px 64px rgba(0,0,0,0.8)`
+                  }}
+                  initial={{ opacity: 0, scale: 0.93, y: 28 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                  transition={{ type: "spring", damping: 22, stiffness: 300 }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <div className="absolute top-0 right-0 w-72 h-48 pointer-events-none"
+                    style={{ background: `radial-gradient(circle at 80% 0%, ${cfg.accent}12, transparent 65%)` }} />
+                  <div className="flex items-center justify-between p-6 pb-4 relative z-10">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-widest text-neutral-500 font-semibold mb-1">Details</p>
+                      <h2 className="text-xl font-bold text-white">{cfg.title}</h2>
+                    </div>
+                    <button onClick={close}
+                      className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-neutral-500 hover:bg-white/[0.1] hover:text-white transition-all">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M1 1l10 10M11 1L1 11"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="px-6 pb-6 relative z-10">{cfg.content}</div>
+                </motion.div>
+              </div>
+            </>
+          );
+        })()}
+      </AnimatePresence>
 
       {/* ── MAIN GRID ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
