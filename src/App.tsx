@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
 import Sidebar from "@/components/Sidebar";
 
 import Overview from "@/pages/Overview";
@@ -14,6 +15,8 @@ import Meetings from "@/pages/Meetings";
 import Notes from "@/pages/Notes";
 import Styleguide from "@/pages/Styleguide";
 import LeftMembers from "@/pages/LeftMembers";
+import  WipGallery from "@/pages/WipGallery";
+import  Announcements from "@/pages/Announements";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +42,8 @@ const PAGES: Record<Tab, React.ComponentType> = {
   styleguide: Styleguide,
   "left-members": LeftMembers,
 };
-
+{active === "wip" && <WipGallery />}
+{active === "announcements" && <Announcements />}
 function Inner() {
   const [tab, setTab] = useState<Tab>("overview");
   const Page = PAGES[tab];
