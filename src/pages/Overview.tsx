@@ -110,6 +110,7 @@ function SearchBar() {
 export default function Overview() {
   const { data, isLoading, error, refetch } = useDashboard();
   const [chartOpen, setChartOpen] = useState(false);
+  const [heroOpen, setHeroOpen] = useState(false);
   const now = new Date();
 
   if (isLoading) {
@@ -191,7 +192,8 @@ export default function Overview() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative rounded-3xl overflow-hidden border border-white/[0.06] bg-[#111111]"
+        onClick={() => setHeroOpen(true)}
+        className="relative rounded-3xl overflow-hidden border border-white/[0.06] bg-[#111111] cursor-pointer hover:border-orange-500/20 transition-all"
         style={{ minHeight: 200 }}
       >
         {/* Gradient orbs */}
@@ -262,6 +264,154 @@ export default function Overview() {
           </div>
         </div>
       </motion.div>
+
+      {/* ── HERO DETAIL MODAL ── */}
+      <AnimatePresence>
+        {heroOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-[999]"
+              style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)" }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setHeroOpen(false)}
+            />
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
+              <motion.div
+                className="pointer-events-auto w-full max-w-2xl rounded-3xl overflow-hidden relative"
+                style={{
+                  background: "#0f0f0f",
+                  border: "1px solid rgba(249,115,22,0.2)",
+                  maxHeight: "90vh", overflowY: "auto",
+                  boxShadow: "0 0 100px rgba(249,115,22,0.08), 0 32px 64px rgba(0,0,0,0.8)"
+                }}
+                initial={{ opacity: 0, scale: 0.93, y: 28 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                transition={{ type: "spring", damping: 22, stiffness: 300 }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="absolute top-0 right-0 w-96 h-64 pointer-events-none" style={{ background: "radial-gradient(circle at 80% 0%, rgba(249,115,22,0.12), transparent 65%)" }} />
+
+                <div className="flex items-start justify-between p-6 pb-4 relative z-10">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-widest text-neutral-500 font-semibold mb-1">Studio Health Report</p>
+                    <h2 className="text-2xl font-bold text-white">Production Overview</h2>
+                    <p className="text-[12px] text-neutral-600 mt-1 font-mono-jet">
+                      {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setHeroOpen(false)}
+                    className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-neutral-500 hover:bg-white/[0.1] hover:text-white transition-all flex-shrink-0"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M1 1l10 10M11 1L1 11"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="px-6 pb-6 space-y-4 relative z-10">
+                  {/* Completion + Health ring */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05]">
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">Overall Completion</p>
+                      <div className="flex items-end gap-2 mb-3">
+                        <span className="font-display font-extrabold text-5xl leading-none" style={{ color: "#F97316", textShadow: "0 0 30px rgba(249,115,22,0.4)" }}>
+                          <CountUp to={s.percent} duration={1000} suffix="%" />
+                        </span>
+                      </div>
+                      <p className="text-sm text-neutral-500 mb-3">{s.completed} of {s.total} scenes done</p>
+                      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ background: "linear-gradient(90deg, #F97316, #FB923C)", boxShadow: "0 0 12px rgba(249,115,22,0.5)" }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${s.percent}%` }}
+                          transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05] flex flex-col items-center justify-center">
+                      <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-4 self-start">Studio Health</p>
+                      {(() => {
+                        const r = 44; const circ = 2 * Math.PI * r;
+                        const color = s.health_score >= 75 ? "#22C55E" : s.health_score >= 50 ? "#F97316" : "#EF4444";
+                        return (
+                          <div className="relative w-28 h-28">
+                            <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                              <circle cx="50" cy="50" r={r} fill="none" stroke="#1C1C1C" strokeWidth="6" />
+                              <motion.circle cx="50" cy="50" r={r} fill="none"
+                                stroke={color} strokeWidth="6" strokeLinecap="round"
+                                strokeDasharray={circ}
+                                initial={{ strokeDashoffset: circ }}
+                                animate={{ strokeDashoffset: circ - (s.health_score / 100) * circ }}
+                                transition={{ duration: 1.4, ease: "easeOut", delay: 0.3 }}
+                                style={{ filter: `drop-shadow(0 0 8px ${color}70)` }}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="font-display font-bold text-2xl text-white leading-none">
+                                <CountUp to={s.health_score} duration={1000} />
+                              </span>
+                              <span className="text-[10px] uppercase tracking-widest mt-0.5" style={{ color }}>
+                                {s.health_score >= 75 ? "Healthy" : s.health_score >= 50 ? "Moderate" : "At Risk"}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* 6-stat grid */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Days Left", value: s.days_left != null ? `${s.days_left}d` : "—", color: s.days_left != null && s.days_left < 30 ? "#EF4444" : "#F97316", sub: "until ship" },
+                      { label: "On-Time Rate", value: `${s.on_time_rate}%`, color: s.on_time_rate >= 80 ? "#22C55E" : "#F97316", sub: "of deliveries" },
+                      { label: "Active Scenes", value: String(s.active), color: "#F97316", sub: "in progress" },
+                      { label: "In Review", value: String(s.in_review), color: "#3B82F6", sub: "awaiting approval" },
+                      { label: "Team Size", value: String(s.members), color: "#8B5CF6", sub: `${s.absent_count} currently away` },
+                      { label: "Revisions", value: String(s.total_revisions), color: "#EC4899", sub: "total requests" },
+                    ].map((item, i) => (
+                      <motion.div
+                        key={item.label}
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 + i * 0.06 }}
+                        className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]"
+                      >
+                        <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-1">{item.label}</p>
+                        <p className="font-display font-bold text-2xl leading-none" style={{ color: item.color }}>{item.value}</p>
+                        <p className="text-[10px] text-neutral-700 mt-1 font-mono-jet">{item.sub}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Studio status flags */}
+                  <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                    <p className="text-[10px] uppercase tracking-widest text-neutral-600 mb-3">Studio Status</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: "Style Guide", val: data.styleguide["locked"] === "true" ? "Locked ✓" : "Unlocked", ok: data.styleguide["locked"] === "true" },
+                        { label: "Production", val: s.active > 0 ? "Active" : "Standby", ok: s.active > 0 },
+                        { label: "Team Availability", val: `${s.members - s.absent_count}/${s.members} available`, ok: true },
+                      ].map((b, i) => (
+                        <div key={i} className="flex items-center gap-2.5 bg-white/[0.02] rounded-xl p-3 border border-white/[0.04]">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${b.ok ? "bg-green-500" : "bg-orange-500"}`} style={{ boxShadow: b.ok ? "0 0 6px #22C55E" : "0 0 6px #F97316" }} />
+                          <div>
+                            <p className="text-[10px] text-neutral-600">{b.label}</p>
+                            <p className={`text-[11px] font-semibold font-mono-jet ${b.ok ? "text-green-400" : "text-orange-400"}`}>{b.val}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── STAT CARDS ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
