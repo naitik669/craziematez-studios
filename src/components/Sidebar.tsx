@@ -19,6 +19,8 @@ const NAV: NavItem[] = [
   { id: "meetings",    icon: Calendar,        label: "Meetings" },
   { id: "notes",       icon: FileText,        label: "Notes" },
   { id: "styleguide",  icon: Palette,         label: "Style Guide" },
+  { id: "wip",           icon: Image,      label: "WIP Gallery" },
+{ id: "announcements", icon: Megaphone,  label: "Announcements" },
 ];
 
 interface Props { active: Tab; onNavigate: (tab: Tab) => void }
