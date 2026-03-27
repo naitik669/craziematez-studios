@@ -51,6 +51,8 @@ const PAGES: Record<Tab, React.ComponentType> = {
 function Inner() {
   const [tab, setTab] = useState<Tab>("overview");
   const Page = PAGES[tab];
+  // expose nav for pages that need to navigate programmatically
+  (window as any).__studioNavigate = setTab;
 
   return (
     <div className="flex h-screen bg-[#0A0A0A] overflow-hidden">
