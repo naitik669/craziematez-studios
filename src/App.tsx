@@ -16,7 +16,7 @@ import Notes from "@/pages/Notes";
 import Styleguide from "@/pages/Styleguide";
 import LeftMembers from "@/pages/LeftMembers";
 import  WipGallery from "@/pages/WipGallery";
-import  Announcements from "@/pages/Announements";
+import  Announcements from "@/pages/Announcements";
 
 const queryClient = new QueryClient();
 export type Tab =
