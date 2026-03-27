@@ -4,6 +4,7 @@ import { useDashboard, initials } from "@/hooks/use-dashboard";
 import { useQuery } from "@tanstack/react-query";
 import { useEnhancedModals } from "@/enhancements/EnhancedModals";
 import { Search, ChevronRight, UserMinus } from "lucide-react";
+import { setProfileMemberId } from "@/pages/MemberProfile";
 
 const ROLE_COLORS: Record<string, string> = {
   animator: "#F97316",
