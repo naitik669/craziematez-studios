@@ -19,7 +19,6 @@ import  WipGallery from "@/pages/WipGallery";
 import  Announcements from "@/pages/Announements";
 
 const queryClient = new QueryClient();
-
 export type Tab =
   | "overview"
   | "pipeline"
@@ -29,7 +28,9 @@ export type Tab =
   | "meetings"
   | "notes"
   | "styleguide"
-  | "left-members"; // ✅ added missing type
+  | "left-members"
+  | "wip"              // ✅ added
+  | "announcements";   // ✅ added
 
 const PAGES: Record<Tab, React.ComponentType> = {
   overview: Overview,
