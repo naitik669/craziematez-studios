@@ -48,6 +48,7 @@ const PAGES: Record<Tab, React.ComponentType> = {
   "left-members": LeftMembers,
   wip: WipGallery,
   announcements: Announcements,
+  "member-profile": MemberProfile,
 };
 
 function Inner() {
