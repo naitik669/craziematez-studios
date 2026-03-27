@@ -20,7 +20,7 @@ const NAV: NavItem[] = [
   { id: "notes",       icon: FileText,        label: "Notes" },
   { id: "styleguide",  icon: Palette,         label: "Style Guide" },
   { id: "wip",           icon: Image,      label: "WIP Gallery" },
-{ id: "announcements", icon: Megaphone,  label: "Announcements" },
+  { id: "announcements", icon: Megaphone,  label: "Announcements" },
 ];
 
 interface Props { active: Tab; onNavigate: (tab: Tab) => void }
