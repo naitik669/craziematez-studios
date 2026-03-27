@@ -28,7 +28,7 @@ function roleColor(role: string) {
 
 export default function Team() {
   const { data } = useDashboard();
-  const { openMember } = useEnhancedModals();
+
   const [q, setQ] = useState("");
 
   const { data: leftRaw } = useQuery({
@@ -112,16 +112,7 @@ export default function Team() {
             return (
               <motion.div
                 key={m.member_id ?? i}
-                onClick={() =>
-                  openMember(m, {
-                    tasks,
-                    delivery,
-                    isAbsent,
-                    absentUntil: data.absences.find(
-                      a => a.member_id === m.member_id
-                    )?.absent_until,
-                  })
-                }
+                onClick={() => setProfileMemberId(m.member_id)}
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.04, 0.5) }}
