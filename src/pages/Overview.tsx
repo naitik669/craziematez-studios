@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { useDashboard, initials, statusColor, statusLabel } from "@/hooks/use-dashboard";
 import CountUp from "@/components/CountUp";
 import StatCard from "@/components/StatCard";
@@ -109,6 +109,7 @@ function SearchBar() {
 
 export default function Overview() {
   const { data, isLoading, error, refetch } = useDashboard();
+  const [chartOpen, setChartOpen] = useState(false);
   const now = new Date();
 
   if (isLoading) {
@@ -274,39 +275,67 @@ export default function Overview() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left col: charts */}
         <div className="lg:col-span-2 space-y-5">
-          {/* Pie + Bar charts */}
+
+          {/* ── CHARTS ROW ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Donut */}
+
+            {/* Status Breakdown — clickable, upgraded */}
             <motion.div
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-              className="bg-[#111] border border-white/[0.06] rounded-2xl p-5"
+              onClick={() => setChartOpen(true)}
+              whileHover={{ scale: 1.015 }}
+              className="bg-[#111] border border-white/[0.06] rounded-2xl p-5 cursor-pointer hover:border-orange-500/20 transition-all group"
             >
-              <p className="text-[11px] uppercase tracking-widest text-neutral-500 mb-4 font-semibold">Status Breakdown</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] uppercase tracking-widest text-neutral-500 font-semibold">Status Breakdown</p>
+                <span className="text-[10px] text-neutral-700 group-hover:text-orange-500/60 transition font-mono-jet">expand ↗</span>
+              </div>
               {s.total > 0 ? (
-                <div className="flex items-center gap-4">
-                  <ResponsiveContainer width={100} height={100}>
-                    <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={28} outerRadius={46} paddingAngle={3} dataKey="value" isAnimationActive>
-                        {pieData.map((e, i) => <Cell key={i} fill={e.color} stroke="transparent" />)}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="space-y-1.5 flex-1">
-                    {pieData.map((d) => (
-                      <div key={d.name} className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.color }} />
-                        <span className="text-[11px] text-neutral-400 flex-1">{d.name}</span>
-                        <span className="text-[11px] font-mono-jet text-neutral-300">{d.value}</span>
+                <>
+                  {/* Animated horizontal bars */}
+                  <div className="space-y-2.5 mb-4">
+                    {pieData.map((d, i) => (
+                      <div key={d.name}>
+                        <div className="flex justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                            <span className="text-[10px] text-neutral-500">{d.name}</span>
+                          </div>
+                          <span className="text-[10px] font-mono-jet" style={{ color: d.color }}>{d.value}</span>
+                        </div>
+                        <div className="h-[4px] rounded-full bg-white/[0.04] overflow-hidden">
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ background: `linear-gradient(90deg, ${d.color}80, ${d.color})`, boxShadow: `0 0 6px ${d.color}50` }}
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(d.value / s.total) * 100}%` }}
+                            transition={{ duration: 0.9, ease: "easeOut", delay: 0.3 + i * 0.08 }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
+                  {/* Mini donut */}
+                  <div className="flex items-center gap-3 pt-2 border-t border-white/[0.04]">
+                    <ResponsiveContainer width={52} height={52}>
+                      <PieChart>
+                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={14} outerRadius={24} paddingAngle={3} dataKey="value" isAnimationActive>
+                          {pieData.map((e, i) => <Cell key={i} fill={e.color} stroke="transparent" />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex-1">
+                      <p className="text-[10px] text-neutral-600 mb-0.5">Total</p>
+                      <p className="text-lg font-bold font-display text-white">{s.total} <span className="text-[11px] text-neutral-600 font-normal">scenes</span></p>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <p className="text-neutral-700 text-sm text-center py-8">No data yet</p>
               )}
             </motion.div>
 
-            {/* Bar chart */}
+            {/* Bar chart — unchanged */}
             <motion.div
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
               className="bg-[#111] border border-white/[0.06] rounded-2xl p-5"
@@ -331,6 +360,162 @@ export default function Overview() {
               )}
             </motion.div>
           </div>
+
+          {/* ── CHART EXPANDED MODAL ── */}
+          <AnimatePresence>
+            {chartOpen && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  className="fixed inset-0 z-[999]"
+                  style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)" }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  onClick={() => setChartOpen(false)}
+                />
+                {/* Modal */}
+                <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
+                  <motion.div
+                    className="pointer-events-auto w-full max-w-2xl rounded-3xl overflow-hidden relative"
+                    style={{
+                      background: "#0f0f0f",
+                      border: "1px solid rgba(249,115,22,0.18)",
+                      maxHeight: "90vh", overflowY: "auto",
+                      boxShadow: "0 0 100px rgba(249,115,22,0.07), 0 32px 64px rgba(0,0,0,0.8)"
+                    }}
+                    initial={{ opacity: 0, scale: 0.93, y: 28 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                    transition={{ type: "spring", damping: 22, stiffness: 300 }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {/* glow orb */}
+                    <div className="absolute top-0 right-0 w-80 h-56 pointer-events-none" style={{ background: "radial-gradient(circle at 75% 0%, rgba(249,115,22,0.1), transparent 65%)" }} />
+
+                    {/* header */}
+                    <div className="flex items-start justify-between p-6 pb-4 relative z-10">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-widest text-neutral-500 font-semibold mb-1">Production Analytics</p>
+                        <h2 className="text-xl font-bold text-white">{s.total} Total Scenes</h2>
+                        <p className="text-[12px] text-neutral-600 mt-0.5 font-mono-jet">{s.percent}% complete · {s.on_time_rate}% on-time</p>
+                      </div>
+                      <button
+                        onClick={() => setChartOpen(false)}
+                        className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-neutral-500 hover:bg-white/[0.1] hover:text-white transition-all flex-shrink-0"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <path d="M1 1l10 10M11 1L1 11"/>
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className="px-6 pb-6 space-y-4 relative z-10">
+
+                      {/* Big animated bar chart */}
+                      <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05]">
+                        <p className="text-[11px] uppercase tracking-widest text-neutral-500 mb-5 font-semibold">Scene Status Breakdown</p>
+                        <div className="space-y-4">
+                          {pieData.map((d, i) => (
+                            <div key={d.name}>
+                              <div className="flex justify-between mb-1.5">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full" style={{ background: d.color, boxShadow: `0 0 5px ${d.color}` }} />
+                                  <span className="text-sm text-neutral-300">{d.name}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-bold text-white font-mono-jet">{d.value}</span>
+                                  <span className="text-[11px] text-neutral-600 font-mono-jet w-9 text-right">
+                                    {Math.round((d.value / s.total) * 100)}%
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
+                                <motion.div
+                                  className="h-full rounded-full relative"
+                                  style={{ background: `linear-gradient(90deg, ${d.color}70, ${d.color})` }}
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${(d.value / s.total) * 100}%` }}
+                                  transition={{ duration: 1.1, ease: "easeOut", delay: 0.15 + i * 0.1 }}
+                                >
+                                  <div className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 10px ${d.color}50` }} />
+                                </motion.div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Donut + Key metrics */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                          <p className="text-[11px] uppercase tracking-widest text-neutral-500 mb-2 font-semibold">Breakdown</p>
+                          <ResponsiveContainer width="100%" height={130}>
+                            <PieChart>
+                              <Pie
+                                data={pieData} cx="50%" cy="50%"
+                                innerRadius={36} outerRadius={56}
+                                paddingAngle={4} dataKey="value"
+                                isAnimationActive startAngle={90} endAngle={-270}
+                              >
+                                {pieData.map((e, i) => <Cell key={i} fill={e.color} stroke="transparent" />)}
+                              </Pie>
+                              <Tooltip contentStyle={{ background: "#151515", border: "1px solid #222", borderRadius: 10, fontSize: 11, color: "#ccc" }} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        <div className="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.05]">
+                          <p className="text-[11px] uppercase tracking-widest text-neutral-500 mb-3 font-semibold">Key Metrics</p>
+                          <div className="space-y-3">
+                            {[
+                              { label: "Completion", value: `${s.percent}%`, color: "#22C55E" },
+                              { label: "On-Time Rate", value: `${s.on_time_rate}%`, color: s.on_time_rate >= 80 ? "#22C55E" : "#F97316" },
+                              { label: "In Review", value: String(s.in_review), color: "#3B82F6" },
+                              { label: "Days Left", value: s.days_left != null ? `${s.days_left}d` : "—", color: "#F97316" },
+                            ].map((item) => (
+                              <div key={item.label} className="flex justify-between items-center">
+                                <span className="text-[11px] text-neutral-500">{item.label}</span>
+                                <span className="text-sm font-bold font-mono-jet" style={{ color: item.color }}>{item.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Deliveries bar in modal */}
+                      {barData.length > 0 && (
+                        <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/[0.05]">
+                          <p className="text-[11px] uppercase tracking-widest text-neutral-500 mb-4 font-semibold">Member Deliveries</p>
+                          <ResponsiveContainer width="100%" height={130}>
+                            <BarChart data={barData} barGap={2} barCategoryGap="30%">
+                              <CartesianGrid vertical={false} stroke="#1C1C1C" />
+                              <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#555" }} axisLine={false} tickLine={false} />
+                              <YAxis hide />
+                              <Tooltip
+                                contentStyle={{ background: "#151515", border: "1px solid #222", borderRadius: 10, fontSize: 11, color: "#ccc" }}
+                                cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                              />
+                              <Bar dataKey="onTime" name="On-Time" fill="#F97316" radius={[4,4,0,0]} isAnimationActive />
+                              <Bar dataKey="late" name="Late" fill="#333" radius={[4,4,0,0]} isAnimationActive />
+                            </BarChart>
+                          </ResponsiveContainer>
+                          <div className="flex gap-4 mt-3">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-sm bg-orange-500" />
+                              <span className="text-[10px] text-neutral-600">On-Time</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-sm bg-neutral-700" />
+                              <span className="text-[10px] text-neutral-600">Late</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </div>
+              </>
+            )}
+          </AnimatePresence>
 
           {/* Timeline */}
           <motion.div
