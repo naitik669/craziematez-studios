@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDashboard } from "@/hooks/use-dashboard";
 import {
   LayoutDashboard, Layers, Users, RefreshCw, FolderOpen,
-  Calendar, FileText, Palette, ChevronRight, Zap, Wifi, Bell
+  Calendar, FileText, Palette, ChevronRight, Zap, Wifi, Bell, Image, Megaphone
 } from "lucide-react";
 
 type Tab = "overview" | "pipeline" | "team" | "revisions" | "files" | "meetings" | "notes" | "styleguide" | "wip" | "announcements";
