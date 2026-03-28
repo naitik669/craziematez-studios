@@ -4,7 +4,7 @@ import { useDashboard, initials } from "@/hooks/use-dashboard";
 import { ArrowLeft, Clock, CheckCircle2, Star } from "lucide-react";
 import { HealthGraph } from "@/enhancements/EnhancedModals";
 
-// ── global state so Team.tsx can push a member id ──────────────────────────
+// ── global state so EnhancedModals can push a member id ────────────────────
 let _memberId: number | null = null;
 let _listeners: Array<() => void> = [];
 
@@ -95,6 +95,7 @@ export default function MemberProfile() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
 
+      {/* back */}
       <button
         onClick={() => (window as any).__studioNavigate("team")}
         className="flex items-center gap-2 text-xs text-neutral-500 hover:text-white transition"
@@ -313,4 +314,3 @@ export default function MemberProfile() {
     </div>
   );
 }
-
