@@ -60,6 +60,8 @@ interface Props { active: Tab; onNavigate: (tab: Tab) => void }
 
 export default function Sidebar({ active, onNavigate }: Props) {
   const { data, isLoading } = useDashboard();
+
+  const [isHovered, setIsHovered] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(() => {
     for (const g of GROUPS) if (g.items.some(i => i.id === active)) return g.id;
     return "main";
@@ -70,24 +72,49 @@ export default function Sidebar({ active, onNavigate }: Props) {
     setOpenGroup(prev => prev === id ? null : id);
   }, []);
 
-  const isExpanded = openGroup !== null;
-  const overdueCount = data ? data.tasks.filter(t => t.urgency === "overdue" && t.status !== "completed").length : 0;
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+    // Auto-open the group that contains the active tab if none is open
+    setOpenGroup(prev => {
+      if (prev) return prev;
+      for (const g of GROUPS) {
+        if (g.items.some(i => i.id === active)) return g.id;
+      }
+      return "main";
+    });
+  }, [active]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+    setNotifOpen(false);
+  }, []);
+
+  const isExpanded = isHovered;
+
+  const overdueCount = data
+    ? data.tasks.filter(t => t.urgency === "overdue" && t.status !== "completed").length
+    : 0;
 
   const notifications = [
     ...((data?.reminders ?? []).filter(r => !r.sent).map(r => ({
       icon: "🔔", text: r.message, sub: r.remind_at?.slice(0, 10), color: "#F97316", id: `r-${r.id}`,
     }))),
-    ...((data?.tasks ?? []).filter(t => t.urgency === "overdue" && t.status !== "completed").slice(0, 5).map(t => ({
-      icon: "⚠️", text: `Overdue: ${t.scene}`, sub: t.member_name, color: "#EF4444", id: `t-${t.id}`,
-    }))),
-    ...((data?.meetings ?? []).filter(m => {
-      const dt = new Date(m.meeting_datetime);
-      return !m.cancelled && dt > new Date() && (dt.getTime() - Date.now()) < 86400000 * 2;
-    }).map(m => ({
-      icon: "📅", text: `Soon: ${m.title}`,
-      sub: new Date(m.meeting_datetime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      color: "#3B82F6", id: `m-${m.id}`,
-    }))),
+    ...((data?.tasks ?? [])
+      .filter(t => t.urgency === "overdue" && t.status !== "completed")
+      .slice(0, 5)
+      .map(t => ({
+        icon: "⚠️", text: `Overdue: ${t.scene}`, sub: t.member_name, color: "#EF4444", id: `t-${t.id}`,
+      }))),
+    ...((data?.meetings ?? [])
+      .filter(m => {
+        const dt = new Date(m.meeting_datetime);
+        return !m.cancelled && dt > new Date() && (dt.getTime() - Date.now()) < 86400000 * 2;
+      })
+      .map(m => ({
+        icon: "📅", text: `Soon: ${m.title}`,
+        sub: new Date(m.meeting_datetime).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        color: "#3B82F6", id: `m-${m.id}`,
+      }))),
   ];
   const unread = notifications.length;
 
@@ -95,6 +122,8 @@ export default function Sidebar({ active, onNavigate }: Props) {
     <motion.aside
       animate={{ width: isExpanded ? 200 : 64 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="relative flex flex-col h-screen bg-[#0D0D0D] border-r border-white/[0.06] z-10 flex-shrink-0 overflow-hidden"
     >
       {/* Logo */}
@@ -252,12 +281,16 @@ export default function Sidebar({ active, onNavigate }: Props) {
           <AnimatePresence>
             {isExpanded && (
               <motion.div
-                initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }}
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0 }}
                 className="flex items-center justify-between flex-1"
               >
                 <span className="text-sm font-medium whitespace-nowrap">Notifications</span>
                 {unread > 0 && (
-                  <span className="bg-orange-500/20 text-orange-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full font-mono-jet">{unread}</span>
+                  <span className="bg-orange-500/20 text-orange-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full font-mono-jet">
+                    {unread}
+                  </span>
                 )}
               </motion.div>
             )}
@@ -268,18 +301,31 @@ export default function Sidebar({ active, onNavigate }: Props) {
         <AnimatePresence>
           {notifOpen && (
             <>
-              <motion.div className="fixed inset-0 z-[998]" onClick={() => setNotifOpen(false)}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
+              <motion.div
+                className="fixed inset-0 z-[998]"
+                onClick={() => setNotifOpen(false)}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              />
               <motion.div
                 initial={{ opacity: 0, x: -8, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -8, scale: 0.97 }}
                 className="absolute left-full ml-2 bottom-0 w-72 rounded-2xl overflow-hidden z-[999]"
-                style={{ background: "#111", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 24px 48px rgba(0,0,0,0.6)" }}
+                style={{
+                  background: "#111",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
+                }}
               >
                 <div className="p-3 border-b border-white/[0.06] flex items-center justify-between">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Notifications</p>
-                  {unread > 0 && <span className="text-[10px] bg-orange-500/15 text-orange-400 px-2 py-0.5 rounded-full font-mono-jet">{unread} new</span>}
+                  {unread > 0 && (
+                    <span className="text-[10px] bg-orange-500/15 text-orange-400 px-2 py-0.5 rounded-full font-mono-jet">
+                      {unread} new
+                    </span>
+                  )}
                 </div>
                 {notifications.length === 0 ? (
                   <div className="p-6 text-center">
@@ -289,14 +335,24 @@ export default function Sidebar({ active, onNavigate }: Props) {
                 ) : (
                   <div className="max-h-72 overflow-y-auto divide-y divide-white/[0.04]">
                     {notifications.map((n, i) => (
-                      <motion.div key={n.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                        className="flex gap-3 p-3 hover:bg-white/[0.03] transition-colors">
+                      <motion.div
+                        key={n.id}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.04 }}
+                        className="flex gap-3 p-3 hover:bg-white/[0.03] transition-colors"
+                      >
                         <span className="text-base mt-0.5 flex-shrink-0">{n.icon}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-[12px] text-neutral-300 leading-snug">{n.text}</p>
-                          {n.sub && <p className="text-[10px] text-neutral-600 font-mono-jet mt-0.5">{n.sub}</p>}
+                          {n.sub && (
+                            <p className="text-[10px] text-neutral-600 font-mono-jet mt-0.5">{n.sub}</p>
+                          )}
                         </div>
-                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: n.color }} />
+                        <span
+                          className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                          style={{ background: n.color }}
+                        />
                       </motion.div>
                     ))}
                   </div>
@@ -332,7 +388,6 @@ export default function Sidebar({ active, onNavigate }: Props) {
           </AnimatePresence>
         </div>
       </div>
-
     </motion.aside>
   );
 }
