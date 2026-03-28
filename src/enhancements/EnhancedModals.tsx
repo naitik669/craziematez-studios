@@ -592,6 +592,33 @@ export function MemberModal({
                   </div>
                 </Field>
               )}
+
+              {/* go to full profile */}
+              <motion.button
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                onClick={() => {
+                  import("@/pages/MemberProfile").then(mod => {
+                    mod.setProfileMemberId(m.member_id);
+                  });
+                  onClose();
+                }}
+                style={{
+                  width: "100%", padding: "12px", borderRadius: 16,
+                  background: `${rc}12`, border: `1px solid ${rc}30`,
+                  color: rc, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = `${rc}22`)}
+                onMouseLeave={e => (e.currentTarget.style.background = `${rc}12`)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+                Go to {m.studio_name || m.display_name}'s full profile
+              </motion.button>
             </div>
           </ModalShell>
         </>
