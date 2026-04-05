@@ -81,10 +81,10 @@ export default function MemberProfile() {
   const active = tasks.filter(t => t.status === "in progress").length;
   const inReview = tasks.filter(t => t.status === "in review").length;
   const todo = tasks.filter(t => t.status === "todo").length;
-  const delivery = data.deliveries.find(d => d.member_id === m.member_id);
+  const delivery = data.deliveries.find(d => String(d.member_id) === String(m.member_id));
   const onTimeRate = delivery ? Math.round((delivery.on_time / Math.max(delivery.count, 1)) * 100) : null;
-  const isAbsent = data.absent_ids.includes(m.member_id);
-  const absentInfo = data.absences.find(a => a.member_id === m.member_id);
+  const isAbsent = data.absent_ids.includes(String(m.member_id));
+  const absentInfo = data.absences.find(a => String(a.member_id) === String(m.member_id));
   const joinDate = m.joined_at ? new Date(m.joined_at) : null;
   const daysActive = joinDate && !isNaN(joinDate.getTime())
     ? Math.round((Date.now() - joinDate.getTime()) / 86400000) : 0;
