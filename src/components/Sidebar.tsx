@@ -86,7 +86,6 @@ export default function Sidebar({ active, onNavigate }: Props) {
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
-    setNotifOpen(false);
   }, []);
 
   const isExpanded = isHovered;
@@ -312,7 +311,7 @@ export default function Sidebar({ active, onNavigate }: Props) {
                 initial={{ opacity: 0, x: -8, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -8, scale: 0.97 }}
-                className="absolute left-full ml-2 bottom-0 w-72 rounded-2xl overflow-hidden z-[999]"
+                className="fixed left-16 bottom-4 w-72 rounded-2xl overflow-hidden z-[999]"
                 style={{
                   background: "#111",
                   border: "1px solid rgba(255,255,255,0.08)",
