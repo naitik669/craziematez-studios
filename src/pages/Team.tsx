@@ -108,8 +108,8 @@ export default function Team() {
             const completed = tasks.filter(t => norm(t.status) === "completed" || norm(t.status) === "approved").length;
             const active = tasks.filter(t => norm(t.status) === "in progress").length;
             const inReview = tasks.filter(t => norm(t.status) === "in review").length;
-            const isAbsent = data.absent_ids.includes(m.member_id);
-            const delivery = data.deliveries.find(d => d.member_id === m.member_id);
+            const isAbsent = data.absent_ids.includes(String(m.member_id));
+            const delivery = data.deliveries.find(d => String(d.member_id) === String(m.member_id));
             const onTimeRate = delivery
               ? Math.round((delivery.on_time / Math.max(delivery.count, 1)) * 100)
               : null;
