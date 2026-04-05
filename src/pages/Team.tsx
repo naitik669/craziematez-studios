@@ -104,9 +104,10 @@ export default function Team() {
           {filtered.map((m, i) => {
             const rc = roleColor(m.role_desc || "");
             const tasks = data.member_tasks[String(m.member_id)] || [];
-            const completed = tasks.filter(t => t.status === "completed").length;
-            const active = tasks.filter(t => t.status === "in progress").length;
-            const inReview = tasks.filter(t => t.status === "in review").length;
+            const norm = (s: string) => (s || "").trim().toLowerCase();
+            const completed = tasks.filter(t => norm(t.status) === "completed" || norm(t.status) === "approved").length;
+            const active = tasks.filter(t => norm(t.status) === "in progress").length;
+            const inReview = tasks.filter(t => norm(t.status) === "in review").length;
             const isAbsent = data.absent_ids.includes(m.member_id);
             const delivery = data.deliveries.find(d => d.member_id === m.member_id);
             const onTimeRate = delivery
@@ -143,7 +144,7 @@ export default function Team() {
                         {initials(m.studio_name || m.display_name)}
                       </div>
                       {/* Live dot */}
-                      {!isAbsent && active > 0 && (
+                      {!isAbsent && (active + inReview) > 0 && (
                         <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-[#111]" />
                       )}
                       {/* Away dot */}
@@ -179,7 +180,7 @@ export default function Team() {
                   {[
                     { v: tasks.length, l: "Scenes" },
                     { v: completed, l: "Done" },
-                    { v: active, l: "Active" },
+                    { v: active + inReview, l: "Active" },
                   ].map((s, j) => (
                     <div key={j} className={`py-2.5 text-center ${j < 2 ? "border-r border-white/[0.05]" : ""}`}>
                       <p className="font-display font-bold text-base text-white">{s.v}</p>
