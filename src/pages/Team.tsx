@@ -34,6 +34,10 @@ export default function Team() {
   const { data: leftRaw } = useQuery({
     queryKey: ["left-members"],
     queryFn: () => fetch("/api/left-members").then(r => r.json()),
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+    retry: 3,
+    retryDelay: (n: number) => Math.min(1000 * 2 ** n, 10000),
   });
 
   if (!data) return <div className="p-6 text-neutral-600">Loading...</div>;
