@@ -92,11 +92,12 @@ def data():
         from datetime import datetime, timezone
 
         total = len(tasks)
-        completed = sum(1 for t in tasks if t.get("status") == "completed")
-        active = sum(1 for t in tasks if t.get("status") == "in progress")
-        in_review = sum(1 for t in tasks if t.get("status") == "in review")
-        todo = sum(1 for t in tasks if t.get("status") == "todo")
-        approved = sum(1 for t in tasks if t.get("status") == "approved")
+        def norm_status(t): return (t.get("status") or "").strip().lower()
+        completed = sum(1 for t in tasks if norm_status(t) == "completed")
+        active = sum(1 for t in tasks if norm_status(t) == "in progress")
+        in_review = sum(1 for t in tasks if norm_status(t) == "in review")
+        todo = sum(1 for t in tasks if norm_status(t) == "todo")
+        approved = sum(1 for t in tasks if norm_status(t) == "approved")
         percent = round((completed / total) * 100) if total > 0 else 0
 
         total_on_time = sum(d.get("on_time") or 0 for d in deliveries)
@@ -125,7 +126,7 @@ def data():
                     dl = datetime.fromisoformat(str(t["deadline"])).replace(tzinfo=timezone.utc)
                     dl = dl.replace(hour=0, minute=0, second=0, microsecond=0)
                     days = (dl - today).days
-                    status = t.get("status", "")
+                    status = (t.get("status") or "").strip().lower()
                     if status not in ("completed", "approved"):
                         if days <= 0: urgency = "overdue"
                         elif days <= 2: urgency = "critical"
@@ -138,7 +139,7 @@ def data():
                 "member_id": int(t["member_id"]) if t.get("member_id") else 0,
                 "member_name": t.get("member_name", ""),
                 "scene": t.get("scene", ""),
-                "status": t.get("status", ""),
+                "status": (t.get("status") or "").strip().lower(),
                 "task_type": t.get("task_type"),
                 "deadline": str(t.get("deadline") or ""),
                 "assigned_at": str(t.get("assigned_at") or ""),
@@ -154,12 +155,26 @@ def data():
         urgency_order = {"overdue": 0, "critical": 1, "warning": 2, "ok": 3}
         serialized_tasks.sort(key=lambda t: urgency_order.get(t["urgency"], 4))
 
+        # Build a name→member_id map so tasks linked only by name still resolve
+        name_to_id = {}
+        for m in members:
+            mid = int(m["member_id"])
+            for key in [m.get("display_name", ""), m.get("studio_name") or ""]:
+                if key:
+                    name_to_id[key.strip().lower()] = mid
+
         member_tasks = {}
         for t in serialized_tasks:
-            mid = str(t["member_id"])
-            if mid not in member_tasks:
-                member_tasks[mid] = []
-            member_tasks[mid].append(t)
+            mid = t["member_id"]
+            # If member_id is missing/0, try resolving via member_name
+            if not mid:
+                mname = (t.get("member_name") or "").strip().lower()
+                mid = name_to_id.get(mname, 0)
+                t["member_id"] = mid  # patch it in-place so the task carries a real id
+            mid_str = str(mid)
+            if mid_str not in member_tasks:
+                member_tasks[mid_str] = []
+            member_tasks[mid_str].append(t)
 
         revision_counts = {}
         for r in revisions:
