@@ -127,7 +127,7 @@ def data():
         total_late = sum(d.get("late") or 0 for d in deliveries)
         on_time_rate = round((total_on_time / (total_on_time + total_late)) * 100) if (total_on_time + total_late) > 0 else 0
 
-        absent_ids = [int(a["member_id"]) for a in absences]
+        absent_ids = [str(a["member_id"]) for a in absences]
         today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
         active_project = next((p for p in projects if p.get("deadline")), None)
@@ -159,7 +159,7 @@ def data():
             serialized_tasks.append({
                 "id": str(t.get("task_id", "")),
                 "task_id": str(t.get("task_id", "")),
-                "member_id": int(t["member_id"]) if t.get("member_id") else 0,
+                "member_id": str(t["member_id"]) if t.get("member_id") else "",
                 "member_name": t.get("member_name", ""),
                 "scene": t.get("scene", ""),
                 "status": (t.get("status") or "").strip().lower(),
@@ -181,7 +181,7 @@ def data():
         # Build a name→member_id map so tasks linked only by name still resolve
         name_to_id = {}
         for m in members:
-            mid = int(m["member_id"])
+            mid = str(m["member_id"])
             for key in [m.get("display_name", ""), m.get("studio_name") or ""]:
                 if key:
                     name_to_id[key.strip().lower()] = mid
@@ -189,10 +189,10 @@ def data():
         member_tasks = {}
         for t in serialized_tasks:
             mid = t["member_id"]
-            # If member_id is missing/0, try resolving via member_name
+            # If member_id is missing/empty, try resolving via member_name
             if not mid:
                 mname = (t.get("member_name") or "").strip().lower()
-                mid = name_to_id.get(mname, 0)
+                mid = name_to_id.get(mname, "")
                 t["member_id"] = mid  # patch it in-place so the task carries a real id
             mid_str = str(mid)
             if mid_str not in member_tasks:
@@ -234,11 +234,11 @@ def data():
                 "active_projects": len(projects),
             },
             "tasks": serialized_tasks,
-            "members": [{"member_id": int(m["member_id"]), "display_name": m.get("display_name",""), "studio_name": m.get("studio_name"), "role_desc": m.get("role_desc"), "skills": m.get("skills"), "experience": m.get("experience"), "socials": m.get("socials"), "joined_at": str(m.get("joined_at") or "")} for m in members],
-            "deliveries": [{"member_id": int(d["member_id"]), "member_name": d.get("member_name",""), "on_time": d.get("on_time") or 0, "late": d.get("late") or 0, "count": d.get("count") or 0} for d in deliveries],
+            "members": [{"member_id": str(m["member_id"]), "display_name": m.get("display_name",""), "studio_name": m.get("studio_name"), "role_desc": m.get("role_desc"), "skills": m.get("skills"), "experience": m.get("experience"), "socials": m.get("socials"), "joined_at": str(m.get("joined_at") or "")} for m in members],
+            "deliveries": [{"member_id": str(d["member_id"]), "member_name": d.get("member_name",""), "on_time": d.get("on_time") or 0, "late": d.get("late") or 0, "count": d.get("count") or 0} for d in deliveries],
             "delivery_log": [{"id": d["id"], "member_id": int(d["member_id"]) if d.get("member_id") else 0, "scene": d.get("scene"), "on_time": d.get("on_time"), "date": str(d.get("date") or "")} for d in delivery_log],
             "uploads": [{"id": u["id"], "member_id": int(u["member_id"]) if u.get("member_id") else 0, "member_name": u.get("member_name",""), "scene": u.get("scene",""), "file_type": u.get("file_type"), "file_url": u.get("link"), "link": u.get("link"), "notes": u.get("notes"), "uploaded_at": str(u.get("uploaded_at") or "")} for u in uploads],
-            "absences": [{"member_id": int(a["member_id"]), "member_name": a.get("member_name",""), "absent_until": str(a.get("absent_until") or ""), "reason": a.get("reason")} for a in absences],
+            "absences": [{"member_id": str(a["member_id"]), "member_name": a.get("member_name",""), "absent_until": str(a.get("absent_until") or ""), "reason": a.get("reason")} for a in absences],
             "absent_ids": absent_ids,
             "styleguide": styleguide,
             "revisions": [{"id": str(r.get("revision_id","")), "revision_id": str(r.get("revision_id","")), "member_id": int(r["member_id"]) if r.get("member_id") else 0, "member_name": r.get("member_name"), "scene": r.get("scene",""), "notes": r.get("reason"), "reason": r.get("reason"), "priority": r.get("priority","medium"), "sent_by": r.get("sent_by"), "date": str(r.get("date") or ""), "revision_number": r.get("revision_number")} for r in revisions],
