@@ -55,6 +55,29 @@ def left_members():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/api/debug-tasks")
+def debug_tasks():
+    conn = get_conn()
+    if not conn:
+        return jsonify({"error": "DB not connected"}), 500
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("SELECT member_id, member_name, scene, status FROM tasks LIMIT 50")
+        tasks = [dict(r) for r in cur.fetchall()]
+        cur.execute("SELECT member_id, display_name, studio_name FROM members")
+        members = [dict(r) for r in cur.fetchall()]
+        cur.close()
+        conn.close()
+        return jsonify({
+            "tasks": tasks,
+            "members": members,
+            "task_member_ids": list(set(str(t.get("member_id")) for t in tasks)),
+            "member_ids": [str(m.get("member_id")) for m in members],
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/api/data")
 def data():
     conn = get_conn()
