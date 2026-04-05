@@ -605,7 +605,7 @@ export default function Overview() {
                       {data.members.map((m) => {
                         const tasks = data.member_tasks[String(m.member_id)] || [];
                         const done = tasks.filter(t => t.status === "completed").length;
-                        const isAbsent = data.absent_ids.includes(m.member_id);
+                        const isAbsent = data.absent_ids.includes(String(m.member_id));
                         return (
                           <div key={m.member_id} className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isAbsent ? "bg-yellow-500" : "bg-green-500"}`} />
