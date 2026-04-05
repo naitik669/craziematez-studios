@@ -56,6 +56,165 @@ const GROUPS: Group[] = [
   },
 ];
 
+
+const MILESTONES = [
+  { label: "Kickoff",    date: "Mar 19", dt: new Date("2026-03-19") },
+  { label: "Style Lock", date: "Apr 1",  dt: new Date("2026-04-01") },
+  { label: "Mid-Prod",   date: "Apr 15", dt: new Date("2026-04-15") },
+  { label: "Anim Done",  date: "May 10", dt: new Date("2026-05-10") },
+  { label: "Edit Lock",  date: "May 20", dt: new Date("2026-05-20") },
+  { label: "🚀 Ship",    date: "May 31", dt: new Date("2026-05-31") },
+];
+
+const ACTIVITY_COLORS: Record<string, string> = {
+  completed: "#22C55E", assigned: "#F97316", revision: "#EF4444",
+  upload: "#3B82F6", member: "#8B5CF6", project: "#EAB308", styleguide: "#EC4899",
+};
+
+function NotifPanel({ notifications, data }: { notifications: any[]; data: any }) {
+  const [tab, setTab] = useState<"alerts" | "activity" | "milestones">("alerts");
+  const now = new Date();
+
+  const nextMilestone = MILESTONES.find(m => m.dt > now);
+  const daysToNext = nextMilestone
+    ? Math.ceil((nextMilestone.dt.getTime() - now.getTime()) / 86400000)
+    : null;
+
+  const tabs = [
+    { id: "alerts" as const,     label: "Alerts",      badge: notifications.length },
+    { id: "activity" as const,   label: "Activity",    badge: 0 },
+    { id: "milestones" as const, label: "Milestones",  badge: daysToNext !== null && daysToNext <= 3 ? 1 : 0 },
+  ];
+
+  return (
+    <>
+      {/* Tab bar */}
+      <div className="flex border-b border-white/[0.06]">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`relative flex-1 py-2 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+              tab === t.id ? "text-orange-400" : "text-neutral-600 hover:text-neutral-400"
+            }`}
+          >
+            {t.label}
+            {t.badge > 0 && (
+              <span className="ml-1 text-[9px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full font-mono-jet">
+                {t.badge}
+              </span>
+            )}
+            {tab === t.id && (
+              <motion.div
+                layoutId="notif-tab-indicator"
+                className="absolute bottom-0 left-0 right-0 h-px bg-orange-500"
+                transition={{ type: "spring", stiffness: 400, damping: 35 }}
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Alerts tab */}
+      <AnimatePresence mode="wait">
+        {tab === "alerts" && (
+          <motion.div key="alerts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="max-h-72 overflow-y-auto divide-y divide-white/[0.04]">
+            {notifications.length === 0 ? (
+              <div className="p-6 text-center">
+                <p className="text-2xl mb-2">✅</p>
+                <p className="text-[12px] text-neutral-600">All caught up!</p>
+              </div>
+            ) : notifications.map((n: any, i: number) => (
+              <motion.div key={n.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="flex gap-3 p-3 hover:bg-white/[0.03] transition-colors">
+                <span className="text-base mt-0.5 flex-shrink-0">{n.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] text-neutral-300 leading-snug">{n.text}</p>
+                  {n.sub && <p className="text-[10px] text-neutral-600 font-mono-jet mt-0.5">{n.sub}</p>}
+                </div>
+                <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: n.color }} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Activity tab */}
+        {tab === "activity" && (
+          <motion.div key="activity" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="max-h-72 overflow-y-auto divide-y divide-white/[0.04]">
+            {!data?.activity?.length ? (
+              <div className="p-6 text-center">
+                <p className="text-2xl mb-2">📭</p>
+                <p className="text-[12px] text-neutral-600">No recent activity</p>
+              </div>
+            ) : data.activity.slice(0, 12).map((a: any, i: number) => {
+              const color = ACTIVITY_COLORS[a.type] || "#555";
+              const relDate = a.date
+                ? (() => {
+                    const diff = Math.floor((now.getTime() - new Date(a.date).getTime()) / 60000);
+                    if (diff < 1) return "just now";
+                    if (diff < 60) return `${diff}m ago`;
+                    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+                    return `${Math.floor(diff / 1440)}d ago`;
+                  })()
+                : "";
+              return (
+                <motion.div key={i} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="flex gap-3 p-3 hover:bg-white/[0.03] transition-colors">
+                  <span className="text-sm mt-0.5 flex-shrink-0">{a.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] text-neutral-300 leading-snug">{a.text}</p>
+                    {relDate && <p className="text-[10px] text-neutral-600 font-mono-jet mt-0.5">{relDate}</p>}
+                  </div>
+                  <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+
+        {/* Milestones tab */}
+        {tab === "milestones" && (
+          <motion.div key="milestones" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="p-3 space-y-2 max-h-72 overflow-y-auto">
+            {MILESTONES.map((m, i) => {
+              const passed = now > m.dt;
+              const isCurrent = !passed && (i === 0 || now > MILESTONES[i - 1].dt);
+              const days = Math.ceil((m.dt.getTime() - now.getTime()) / 86400000);
+              return (
+                <motion.div key={m.label} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`flex items-center gap-3 p-2.5 rounded-xl transition-colors ${
+                    isCurrent ? "bg-orange-500/10 border border-orange-500/20" : "bg-white/[0.02] border border-white/[0.04]"
+                  }`}>
+                  {/* dot */}
+                  <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                    passed ? "bg-green-500" : isCurrent ? "bg-orange-400 animate-pulse" : "bg-neutral-700"
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[12px] font-semibold ${passed ? "text-neutral-600 line-through" : isCurrent ? "text-orange-300" : "text-neutral-300"}`}>
+                      {m.label}
+                    </p>
+                    <p className="text-[10px] text-neutral-600 font-mono-jet">{m.date}</p>
+                  </div>
+                  <span className={`text-[10px] font-mono-jet font-semibold flex-shrink-0 ${
+                    passed ? "text-green-600" : isCurrent ? "text-orange-400" : "text-neutral-600"
+                  }`}>
+                    {passed ? "✓ done" : isCurrent ? `${days}d left` : `in ${days}d`}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 interface Props { active: Tab; onNavigate: (tab: Tab) => void }
 
 export default function Sidebar({ active, onNavigate }: Props) {
@@ -311,13 +470,14 @@ export default function Sidebar({ active, onNavigate }: Props) {
                 initial={{ opacity: 0, x: -8, scale: 0.97 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -8, scale: 0.97 }}
-                className="fixed left-16 bottom-4 w-72 rounded-2xl overflow-hidden z-[999]"
+                className="fixed left-16 bottom-4 w-80 rounded-2xl overflow-hidden z-[999]"
                 style={{
                   background: "#111",
                   border: "1px solid rgba(255,255,255,0.08)",
                   boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
                 }}
               >
+                {/* Header */}
                 <div className="p-3 border-b border-white/[0.06] flex items-center justify-between">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Notifications</p>
                   {unread > 0 && (
@@ -326,36 +486,9 @@ export default function Sidebar({ active, onNavigate }: Props) {
                     </span>
                   )}
                 </div>
-                {notifications.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <p className="text-2xl mb-2">✅</p>
-                    <p className="text-[12px] text-neutral-600">All caught up!</p>
-                  </div>
-                ) : (
-                  <div className="max-h-72 overflow-y-auto divide-y divide-white/[0.04]">
-                    {notifications.map((n, i) => (
-                      <motion.div
-                        key={n.id}
-                        initial={{ opacity: 0, y: 4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.04 }}
-                        className="flex gap-3 p-3 hover:bg-white/[0.03] transition-colors"
-                      >
-                        <span className="text-base mt-0.5 flex-shrink-0">{n.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[12px] text-neutral-300 leading-snug">{n.text}</p>
-                          {n.sub && (
-                            <p className="text-[10px] text-neutral-600 font-mono-jet mt-0.5">{n.sub}</p>
-                          )}
-                        </div>
-                        <span
-                          className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
-                          style={{ background: n.color }}
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
+
+                {/* Tabs */}
+                <NotifPanel notifications={notifications} data={data} />
               </motion.div>
             </>
           )}
